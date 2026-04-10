@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PR Review Findings",
+  "type": "object",
+  "required": [
+    "findings",
+    "summary"
+  ],
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "file",
+          "line",
+          "severity",
+          "category",
+          "issue",
+          "recommendation"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Relative file path"
+          },
+          "line": {
+            "type": "integer",
+            "description": "Line number, or 0 if file-level"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "blocker",
+              "high",
+              "medium",
+              "low"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "security",
+              "correctness",
+              "performance",
+              "style",
+              "maintainability"
+            ]
+          },
+          "issue": {
+            "type": "string",
+            "description": "Clear description of the problem"
+          },
+          "recommendation": {
+            "type": "string",
+            "description": "Specific fix or next step"
+          },
+          "is_new": {
+            "type": "boolean",
+            "description": "True if not present in prior review findings",
+            "default": true
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_findings",
+        "blocker_count",
+        "high_count",
+        "pass"
+      ],
+      "properties": {
+        "total_findings": {
+          "type": "integer"
+        },
+        "blocker_count": {
+          "type": "integer"
+        },
+        "high_count": {
+          "type": "integer"
+        },
+        "medium_count": {
+          "type": "integer"
+        },
+        "low_count": {
+          "type": "integer"
+        },
+        "pass": {
+          "type": "boolean",
+          "description": "False if any blocker or high findings exist"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

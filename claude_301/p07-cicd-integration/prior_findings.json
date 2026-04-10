@@ -1,0 +1,47 @@
+[
+  {
+    "file": "auth.py",
+    "line": 22,
+    "severity": "critical",
+    "category": "security",
+    "issue": "SQL injection vulnerability due to unsafe f-string interpolation",
+    "recommendation": "Use parameterized queries to safely insert variables into SQL statements.",
+    "is_new": true
+  },
+  {
+    "file": "auth.py",
+    "line": 8,
+    "severity": "high",
+    "category": "security",
+    "issue": "Hardcoded secret key in the source code",
+    "recommendation": "Load the secret key from environment variables or a secure vault.",
+    "is_new": true
+  },
+  {
+    "file": "auth.py",
+    "line": 35,
+    "severity": "high",
+    "category": "security",
+    "issue": "Password stored as plaintext in the database",
+    "recommendation": "Use a strong hashing algorithm like bcrypt or Argon2 to securely store passwords.",
+    "is_new": true
+  },
+  {
+    "file": "orders.py",
+    "line": 38,
+    "severity": "medium",
+    "category": "security",
+    "issue": "Refund processed without verifying order ownership",
+    "recommendation": "Check that the requesting customer ID matches the order's customer ID.",
+    "is_new": true
+  },
+  {
+    "file": "orders.py",
+    "line": 55,
+    "severity": "low",
+    "category": "information leakage",
+    "issue": "Raw error details leaked to caller, exposing sensitive information",
+    "recommendation": "Return a generic error message and log the detailed error internally.",
+    "is_new": true
+  }
+]
