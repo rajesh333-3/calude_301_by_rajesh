@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "customer-support": {
+      "command": "python3",
+      "args": ["./mcp_server.py"],
+      "env": {
+        "SUPPORT_DB_URL":  "${SUPPORT_DB_URL}",
+        "SUPPORT_API_KEY": "${SUPPORT_API_KEY}"
+      }
+    }
+  }
+}
