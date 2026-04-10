@@ -15,13 +15,137 @@ directly control LLM routing accuracy and output guarantees.
 
 ---
 
-## Run
+## Setup
 
 ```bash
-python v1_bad_tools.py      # see misrouting in action
-python v2_good_tools.py     # see explicit descriptions fix it
-python v3_tool_choice.py    # explore tool_choice modes + structured errors
+cd claude_301/p02-tool-design
+pip install openai python-dotenv   # if not already installed
+echo "OPENAI_API_KEY=sk-..." > .env
 ```
+
+---
+
+## Run & Explore
+
+### Step 1 — See the problem (`v1_bad_tools.py`)
+
+```bash
+python v1_bad_tools.py
+```
+
+**Expected output** (results vary run-to-run — that's the point):
+```
+=== Version 1: BAD Tool Descriptions ===
+
+Expected         Got              OK?    Query
+--------------------------------------------------------------------------------
+lookup_order     lookup_order     ✓      What's the status of order #ORD-12345?
+lookup_order     get_customer     ✗      Can you check order ORD-67890 for me?
+get_customer     get_customer     ✓      Look up customer CUST-001
+...
+
+── Results ──
+Correct:    17/20
+Error rate: 15.0%
+```
+
+**What to look for:** The `✗` rows — queries that clearly say "order" but got
+routed to `get_customer`, or vice versa. Error rate is non-deterministic;
+re-run a few times to see it fluctuate between 5–30%.
+
+**Experiment:** Edit `BAD_TOOLS` descriptions to be even vaguer (e.g., `"Gets info"`)
+and re-run — misrouting gets worse.
+
+---
+
+### Step 2 — See the fix (`v2_good_tools.py`)
+
+```bash
+python v2_good_tools.py
+```
+
+**Expected output:**
+```
+=== Version 2: GOOD Tool Descriptions ===
+
+Expected         Got              OK?    Query
+--------------------------------------------------------------------------------
+lookup_order     lookup_order     ✓      What's the status of order #ORD-12345?
+lookup_order     lookup_order     ✓      Can you check order ORD-67890 for me?
+...
+
+── Results ──
+Correct:    20/20
+Error rate: 0.0%
+
+✓ Zero misroutings — explicit descriptions eliminated all ambiguity.
+```
+
+**What to look for:** Every row shows `✓`. The error rate should be 0% consistently.
+
+**Experiment:** Remove just the `DO NOT USE` clause from one tool description and
+re-run — misrouting reappears. This shows every clause is load-bearing.
+
+---
+
+### Step 3 — Explore tool_choice modes (`v3_tool_choice.py`)
+
+```bash
+python v3_tool_choice.py
+```
+
+**Expected output (condensed):**
+```
+============================================================
+tool_choice='auto'  — model decides whether to use a tool
+============================================================
+
+  [Order question (tool expected)]
+  Query: What's the status of order ORD-12345?
+  Tool used: True  |  finish_reason: tool_calls
+  [tool:lookup_order] → {'order_id': 'ORD-12345', 'status': 'shipped', ...}
+
+  [Conversational (no tool expected)]
+  Query: Hi! What can you help me with?
+  Tool used: False  |  finish_reason: stop
+  [text] I can help you with customer account lookups and order status checks...
+
+============================================================
+tool_choice='required'  — MUST call at least one tool
+============================================================
+
+  [Conversational (forced to use a tool anyway)]
+  Query: Hello, how are you?
+  [tool:get_customer] isError=True category=validation retryable=False → ...
+
+============================================================
+Structured errors: isError / errorCategory / isRetryable
+============================================================
+
+  [transient]
+  isError:       True
+  errorCategory: transient
+  isRetryable:   True
+  message:       Database timeout — safe to retry
+```
+
+**What to look for:**
+- `auto`: conversational query → no tool call (`finish_reason: stop`)
+- `required`: even "Hello" forces a tool call — model picks the least-wrong tool
+- Forced: the wrong tool is called for the input — demonstrates pinning
+- Errors: notice `transient` is the only one with `isRetryable: True`
+
+**Experiment:** In `demo_forced()`, swap which tool is forced and observe the model
+trying to make sense of a mismatched identifier.
+
+---
+
+### Summary: what error rate to expect
+
+| File | Runs | Expected error rate |
+|---|---|---|
+| `v1_bad_tools.py` | multiple | 5–30% (non-deterministic) |
+| `v2_good_tools.py` | multiple | 0% consistently |
 
 Requires `OPENAI_API_KEY` in `.env`.
 
